@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "463318533878",
+    "firebase_url": "https://coinz-game-ilp.firebaseio.com",
+    "project_id": "coinz-game-ilp",
+    "storage_bucket": "coinz-game-ilp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463318533878:android:714e78ee4b503a45",
+        "android_client_info": {
+          "package_name": "com.coinz.michaelabrezinova.coinz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "463318533878-nobuju2a1dm7mctmve081hlq0erj65mm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.coinz.michaelabrezinova.coinz",
+            "certificate_hash": "b2b4f2c226d4316e1b60da8f85f7568dfc63bbdd"
+          }
+        },
+        {
+          "client_id": "463318533878-3v8lb1deu2l0nosfd5be8a4f7cvu1joe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjmMlM2jNpkQd8ofJzY25a3yxVuvPaQRk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "463318533878-3v8lb1deu2l0nosfd5be8a4f7cvu1joe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

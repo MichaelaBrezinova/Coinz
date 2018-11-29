@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Coinz</string>
+    <string name="access_token">pk.eyJ1IjoibWljaGFlbGFicmV6aW5vdmEiLCJhIjoiY2pvaXE0cDFuMGF2NjNwcW5ndnBjODZrZSJ9.wRzGNNsO9tL1TRav_zu0Yw</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="title_activity_wallet">WalletActivity</string>
+
 </resources>

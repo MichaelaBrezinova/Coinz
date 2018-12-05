@@ -61,8 +61,9 @@ object DownloadCompleteRunner: DownloadCompleteListener {
     override fun downloadComplete(result: String) {
         this.result = result
         val fc = FeatureCollection.fromJson(result)
-        if(fc!=null)
-        {MainActivity.features = fc.features()!!.toCollection(ArrayList())
+        if(fc!=null) {
+            MapsActivity.features = fc.features()!!.toCollection(ArrayList())
+            MapsActivity.features_testing = fc
         }
     }
 }

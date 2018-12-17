@@ -5,6 +5,7 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     tools:context=".MainActivity">
 
     <EditText
@@ -17,13 +18,15 @@
         android:layout_marginBottom="8dp"
         android:ems="10"
         android:hint="@string/fui_sign_in_with_email"
+        android:textAlignment="center"
         android:inputType="textEmailAddress"
+        android:textColorHint="@color/mapboxWhite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.444"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.693" />
+        app:layout_constraintVertical_bias="0.499" />
 
     <EditText
         android:id="@+id/fieldPassword"
@@ -35,40 +38,95 @@
         android:layout_marginBottom="8dp"
         android:ems="10"
         android:hint="Password"
+        android:textAlignment="center"
         android:inputType="textPassword"
+        android:textColorHint="@color/mapboxWhite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.444"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fieldEmail"
-        app:layout_constraintVertical_bias="0.054" />
+        app:layout_constraintVertical_bias="0.037" />
 
     <Button
         android:id="@+id/sign_in"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="56dp"
         android:layout_marginBottom="8dp"
+        android:stateListAnimator="@null"
         android:text="SIGN IN"
+        android:textColor="@color/mapboxWhite"
+        app:backgroundTint="@color/fui_bgPhone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.647"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.939" />
+        app:layout_constraintVertical_bias="0.872" />
 
     <Button
         android:id="@+id/create_account"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:stateListAnimator="@null"
+        app:backgroundTint="@color/fui_bgPhone"
         android:layout_marginBottom="8dp"
         android:text="CREATE ACCOUNT"
+        android:textColor="@color/mapboxWhite"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sign_in"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.939" />
+        app:layout_constraintVertical_bias="0.741" />
+
+    <TextView
+        android:id="@+id/logo"
+        style="@android:style/Widget.DeviceDefault.TextView"
+        android:layout_width="199dp"
+        android:layout_height="75dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="COIN"
+        android:textAlignment="center"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
+        android:textSize="30pt"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.337"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.327"
+        tools:style="@android:style/Widget.TextView" />
+
+    <TextView
+        android:id="@+id/logo2"
+        style="@android:style/Widget.DeviceDefault.TextView"
+        android:layout_width="143dp"
+        android:layout_height="75dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Z"
+        android:textAlignment="center"
+        android:textColor="@color/fui_bgPhone"
+        android:textSize="30pt"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.822"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.327"
+        tools:style="@android:style/Widget.TextView" />
 
 </android.support.constraint.ConstraintLayout>

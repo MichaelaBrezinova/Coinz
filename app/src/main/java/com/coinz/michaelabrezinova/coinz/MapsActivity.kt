@@ -20,8 +20,9 @@ import com.mapbox.android.core.permissions.PermissionsManager
 import com.mapbox.mapboxsdk.Mapbox
 import java.text.SimpleDateFormat
 import android.content.Context
-import com.google.gson.JsonObject
 import android.view.View
+import android.widget.TextView
+import android.widget.Toast
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
@@ -38,10 +39,8 @@ import java.util.Date
 import com.mapbox.mapboxsdk.annotations.Icon
 import com.mapbox.mapboxsdk.annotations.IconFactory
 import com.mapbox.mapboxsdk.style.layers.Layer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -49,24 +48,25 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
-import kotlinx.android.synthetic.main.activity_maps.openWallet
-import kotlinx.android.synthetic.main.activity_maps.changeTheme
-import kotlinx.android.synthetic.main.activity_maps.CountCollected
+import kotlinx.android.synthetic.main.activity_maps.openWalletButton
+import kotlinx.android.synthetic.main.activity_maps.changeThemeButton
 import kotlinx.android.synthetic.main.content_maps.view.*
 import org.xml.sax.Parser
 
 
 class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListener,
-        OnMapReadyCallback,LocationEngineListener, MapboxMap.OnMapClickListener  {
+        OnMapReadyCallback,LocationEngineListener, MapboxMap.OnMarkerClickListener  {
 
     private val tag= "MapsActivity"
 
     private var user: FirebaseUser? = null
     private var firestore: FirebaseFirestore? = null
     private var userReference: DocumentReference? = null
+    private val preferencesFile = "MyPrefsFile"
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
     private var layer: Layer? = null
+    private var markers: ArrayList<Marker>? = null
 
     private lateinit var permissionManager: PermissionsManager
     private lateinit var originLocation: Location
@@ -89,8 +89,8 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         firestore = FirebaseFirestore.getInstance()
 
         setContentView(R.layout.activity_maps)
-        openWallet?.setOnClickListener(this)
-        changeTheme?.setOnClickListener(this)
+        openWalletButton?.setOnClickListener(this)
+        changeThemeButton?.setOnClickListener(this)
 
         Mapbox.getInstance(applicationContext, getString(R.string.access_token))
         mapView = findViewById(R.id.mapboxMapView)
@@ -108,6 +108,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
             layer = map?.getLayer("background")
             map?.uiSettings?.isCompassEnabled = true
             map?.uiSettings?.isZoomControlsEnabled = true
+            map?.setOnMarkerClickListener(this)
             enableLocation()
             displayCoins()
         }
@@ -124,55 +125,6 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
             permissionManager = PermissionsManager(this)
             permissionManager.requestLocationPermissions(this)
         }
-    }
-
-    private fun displayCoins(){
-        Log.d(tag, "Displaying of coins has started")
-        //setting up DrawableCompat to change colors of the markers
-        var vectorDrawable: Drawable = ResourcesCompat.getDrawable(resources,R.drawable.ic_marker,
-                null)!!
-        var bitmap: Bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,
-                vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
-        var canvas = Canvas(bitmap)
-        vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
-
-
-        //looping through features and displaying the coins on the map, setting proper color,
-        //location, title and snippet
-        //TODO: fix snippet
-        if(!features.isEmpty()) {
-            Log.d(tag, "[features] are non-empty and started to be displayed")
-            for (feature in features) {
-
-                val p = feature.geometry() as Point
-                val props = feature.properties()
-                val c = props?.get("marker-color").toString()
-
-                //sets color depending on the color stated in the JSON
-                if (c.contains("ffdf00")) {
-                    DrawableCompat.setTint(vectorDrawable, Color.parseColor("#292e1e"))
-                } else if (c.contains("#008000")) {
-                    DrawableCompat.setTint(vectorDrawable, Color.parseColor("#e8d17f"))
-                } else if (c.contains("0000ff")) {
-                    DrawableCompat.setTint(vectorDrawable, Color.parseColor("#66cc81"))
-                } else {
-                    DrawableCompat.setTint(vectorDrawable, Color.parseColor("#ff7575"))
-                }
-
-                vectorDrawable.draw(canvas)
-                var icon: Icon = IconFactory.getInstance(this).fromBitmap(bitmap)
-
-                var latlng = LatLng(p.coordinates()[1], p.coordinates()[0])
-
-                //adds marker to map
-                map?.addMarker(MarkerOptions()
-                        .title(feature.id())
-                        .position(latlng)
-                        .snippet(props?.get("currency").toString())
-                        .icon(icon))
-            }
-        }
-
     }
 
     @SuppressWarnings("MissingPermission")
@@ -238,10 +190,20 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         }
     }
 
-    override fun onMapClick(point: LatLng){
-        println("Works")
-        // destinationMarker = map?.addMarker(MarkerOptions()
-        // .position(LatLng(55.94327575639263, -3.18686952803462)))
+    override fun onMarkerClick( marker: Marker): Boolean {
+        Log.d(tag,"[onMarkerClick] marker $marker has been clicked")
+        var markerLocation: Location? = Location("")
+        markerLocation?.longitude = marker.position.longitude
+        markerLocation?.latitude = marker.position.latitude
+        if(originLocation.distanceTo(markerLocation)<=25) {
+            map?.removeMarker(marker)
+            markers?.remove(marker)
+            MainActivity.user?.collectedIds?.add(marker.snippet)
+            MainActivity.user?.dailyCollected = MainActivity.user?.dailyCollected?.plus(1)!!
+            var countCollected = findViewById<TextView>(R.id.CountCollected)
+            countCollected.text = Integer.toString(MainActivity.user?.dailyCollected!!)
+        }
+        return true
     }
 
     @SuppressWarnings("MissingPermission")
@@ -266,39 +228,17 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                 .setTimestampsInSnapshotsEnabled(true)
                 .build()
         firestore?.firestoreSettings = settingsFireBase
+        userReference = firestore?.collection("users")
+                ?.document(MainActivity.currentUser!!.email!!)
 
-        userReference = firestore?.collection("users")?.document(user!!.email!!)
-        userReference?.get()
-                ?.addOnSuccessListener { document ->
-                    if (document != null) {
-                        Log.d(tag, "DocumentSnapshot data: " + document.data)
-                        val lastDateSignedIn = document.data!!["lastDateSignedIn"].toString()
-                        val overallScore = document.data!!["overallScore"] as Int
-                        if(lastDateSignedIn!=currentDate) {
-                            resetUser(overallScore)
-                        } else {
-                            //MainActivity.user?.collectedIds =""
-                            MainActivity.user?.collectedBankable =
-                                    document.data!!["collectedBankable"] as Int
-                            MainActivity.user?.collectedSpareChange =
-                                    document.data!!["collectedSpareChange"] as Int
-                            MainActivity.user?.dailyCollected=
-                                    document.data!!["dailyCollected"] as Int
-                            MainActivity.user?.dailyDistanceWalked =
-                                    document.data!!["dailyDistanceWalked"] as Int
-                            MainActivity.user?.dailyScore =
-                                    document.data!!["dailyScore"] as Int
-                            MainActivity.user?.overallScore = overallScore
-                        }
-                    } else {
-                        Log.d(tag, "No such document")
-                    }
-                }
-                ?.addOnFailureListener { exception ->
-                    Log.d(tag, "get failed with ", exception)
-                }
-
-        downloadCoins()
+        if(MainActivity.downloadDate!=currentDate){
+            downloadCoins()
+        } else {
+            val fc = FeatureCollection.fromJson(MainActivity.downloadedGJson!!)
+            if(fc!=null) {
+                features = fc.features()!!.toCollection(ArrayList())
+            }
+        }
         //realTimeUpdateListener()
         mapView?.onStart()
     }
@@ -318,16 +258,21 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
         userReference?.update(
                 "lastDateSignedIn", currentDate,
-                "dailyCollected",MainActivity.user?.dailyCollected,
-                "dailyDistanceWalked",MainActivity.user?.dailyDistanceWalked,
-                "dailyScore",MainActivity.user?.dailyScore,
-                "collectedBankable",MainActivity.user?.collectedBankable,
-                "collectedSpareChange",15,
-                "collectedIds", MainActivity.user?.collectedIds)
-
+                "dailyCollected", MainActivity.user?.dailyCollected,
+                "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
+                "dailyScore", 555,
+                "collectedBankable", MainActivity.user?.collectedBankable,
+                "collectedSpareChange", MainActivity.user?.collectedSpareChange,
+                "collectedIds", MainActivity.user?.collectedIds,
+                "collectedGift", MainActivity.user?.collectedGift)
         locationEngine.removeLocationUpdates()
         locationLayerPlugin.onStop()
         mapView?.onStop()
+
+        val editor = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE).edit()
+        editor.putString("lastDownloadDate", MainActivity.downloadDate)
+        editor.putString("lastDownloadedGJson", MainActivity.downloadedGJson)
+        editor.apply()
     }
 
     override fun onDestroy() {
@@ -352,42 +297,98 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
     override fun onClick(v: View) {
         val i = v.id
         when (i) {
-            R.id.openWallet -> startActivity(Intent(applicationContext, WalletActivity::class.java))
-            //R.id.changeTheme ->  mapView?.setStyleUrl("@string/mapbox_style_dark")
+            R.id.openWalletButton -> startActivity(Intent(applicationContext, WalletActivity::class.java))
+            //R.id.changeThemeButton ->  mapView?.setStyleUrl("@string/mapbox_style_dark")
         }
     }
 
+    private fun displayCoins(){
+        Log.d(tag, "Displaying of coins has started")
+
+        //looping through features and displaying the coins on the map, setting proper color,
+        //location, title and snippet
+        //TODO: fix snippet
+        if(!features.isEmpty()) {
+            Log.d(tag, "[features] are non-empty and started to be displayed")
+            for (feature in features) {
+                val properties = feature.properties()
+                if (!MainActivity.user?.collectedIds?.contains(properties?.get("id").toString())!!){
+
+                    val point = feature.geometry() as Point
+                    val color= properties?.get("marker-color").toString()
+                    val icon: Icon = getIcon(color)
+                    val latlng = LatLng(point.coordinates()[1], point.coordinates()[0])
+                    var value  = 0
+
+
+                    //Create marker, add marker to map and to ArrayList of markers
+                    val marker = map?.addMarker(MarkerOptions()
+                            .snippet(value.toString())
+                            .position(latlng)
+                            .title(properties?.get("id").toString())
+                            .icon(icon))
+                    markers?.add(marker!!)
+                }
+            }
+        }
+
+    }
+
+    //Initialized download of the coins that is done in the DownloadFileTask
     private fun downloadCoins() {
+        //updates last download date
         MainActivity.downloadDate = currentDate
+
         val listener = DownloadCompleteRunner
         val downloader = DownloadFileTask(listener)
-        val path = "http://homepages.inf.ed.ac.uk/stg/coinz/" + currentDate + "/coinzmap.geojson"
+        val path = "http://homepages.inf.ed.ac.uk/stg/coinz/$currentDate/coinzmap.geojson"
         downloader.execute(path)
+
         Log.d(tag,"Download of the coins has been executed")
     }
 
-    private fun resetUser( overallScore: Int) {
-        MainActivity.user?.collectedIds =""
-        MainActivity.user?.collectedBankable =0
-        MainActivity.user?.collectedSpareChange = 0
-        MainActivity.user?.dailyCollected= 0
-        MainActivity.user?.dailyDistanceWalked = 0
-        MainActivity.user?.dailyScore = 0
-        MainActivity.user?.overallScore = overallScore
+    //returns icon with color depending on the color it had in the geoJson file
+    private fun getIcon(color: String ): Icon {
+        var vectorDrawable: Drawable = ResourcesCompat.getDrawable(resources,R.drawable.ic_marker,
+                null)!!
+        var bitmap: Bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,
+                vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        var canvas = Canvas(bitmap)
+        vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
+
+        when {
+            color.contains("ffdf00") ->
+                DrawableCompat.setTint(vectorDrawable, Color.parseColor("#292e1e"))
+            color.contains("#008000") ->
+                DrawableCompat.setTint(vectorDrawable, Color.parseColor("#e8d17f"))
+            color.contains("0000ff") ->
+                DrawableCompat.setTint(vectorDrawable, Color.parseColor("#66cc81"))
+            else -> DrawableCompat.setTint(vectorDrawable, Color.parseColor("#ff7575"))
+        }
+
+        vectorDrawable.draw(canvas)
+        var icon: Icon = IconFactory.getInstance(this).fromBitmap(bitmap)
+        return icon
+
     }
 
-    /*private fun realtimeUpdateListener() {
+    private fun realtimeUpdateListener() {
         firestore?.collection("users")
                 ?.document(user!!.email!!)?.addSnapshotListener{ documentSnapshot, e ->
             when {
                 e != null -> Log.e(tag, e.message)
                 documentSnapshot != null && documentSnapshot.exists() -> {
                 with(documentSnapshot) {
-                    val collected = "${data?.get("dailyCollected")}"
-                    incoming message text.text = incoming
+                    val collected = data?.get("collectedGift").toString().toInt()
+                    MainActivity.user?.collectedGift =
+                            MainActivity.user?.collectedGift!!.plus(collected)
+                    userReference?.update("collectedGift",0)
+                    Toast.makeText(
+                            baseContext, "You have received a gift from your friend!",
+                            Toast.LENGTH_SHORT).show()
                 }
             }
             }
         }
-    }*/
+    }
 }

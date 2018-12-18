@@ -16,7 +16,6 @@
         <activity
             android:name=".MainActivity"
             android:label="Coinz"
-            android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,13 +26,11 @@
         <activity
             android:name=".MapsActivity"
             android:label="CoinzMaps"
-            android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".WalletActivity"
             android:label="Wallet"
-            android:launchMode="singleTop"
             android:parentActivityName=".MapsActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

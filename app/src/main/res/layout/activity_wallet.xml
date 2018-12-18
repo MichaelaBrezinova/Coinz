@@ -15,7 +15,7 @@
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
@@ -27,47 +27,108 @@
         layout="@layout/content_wallet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="0dp" />
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar2"
-        android:layout_width="487dp"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/AppTheme.PopupOverlay" />
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="49dp" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/backMapButton"
+        android:id="@+id/friendtransferButton"
+        android:layout_width="95dp"
+        android:layout_height="95dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        app:borderWidth="0dp"
+        app:elevation="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.245"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.892"
+        app:maxImageSize="56dp"
+        app:pressedTranslationZ="1dp"
+        app:backgroundTint="@color/colorPrimaryDark"
+        app:srcCompat="@drawable/moneytransfer" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/banktransferButton"
+        android:layout_width="95dp"
+        android:layout_height="95dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        app:backgroundTint="@color/colorPrimaryDark"
+        app:borderWidth="0dp"
+        app:elevation="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.739"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.892"
+        app:maxImageSize="56dp"
+        app:pressedTranslationZ="1dp"
+        app:srcCompat="@drawable/bank" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="187dp"
+        android:layout_height="176dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.168"
+        app:srcCompat="@drawable/circle" />
+
+    <TextView
+        android:id="@+id/overallScoreSign"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/fui_bgPhone"
+        android:text="Total Score"
+        android:textColor="@color/mapboxWhite"
+        android:textSize="25dp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.975"
+        app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.94"
-        app:srcCompat="@android:drawable/ic_dialog_map" />
+        app:layout_constraintTop_toTopOf="@+id/appBarLayout2"
+        app:layout_constraintVertical_bias="0.189" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/infoButton"
+    <TextView
+        android:id="@+id/overallScore"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:clickable="true"
-        app:backgroundTint="@color/fui_bgPhone"
-        app:layout_constraintBottom_toTopOf="@+id/backMapButton"
+        android:backgroundTint="@color/fui_bgPhone"
+        android:text="0"
+        android:textAlignment="center"
+        android:textColor="@color/fui_bgPhone"
+        android:textSize="35dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.986"
-        app:rippleColor="@color/fui_bgPhone"
-        app:srcCompat="@android:drawable/ic_menu_help" />
+        app:layout_constraintTop_toTopOf="@+id/appBarLayout2"
+        app:layout_constraintVertical_bias="0.297" />
 
 </android.support.constraint.ConstraintLayout>

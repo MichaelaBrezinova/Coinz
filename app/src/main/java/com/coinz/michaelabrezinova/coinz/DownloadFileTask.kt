@@ -1,5 +1,6 @@
 package com.coinz.michaelabrezinova.coinz
 
+import android.content.Context
 import android.os.AsyncTask
 import java.net.URL
 import android.util.Log
@@ -60,10 +61,10 @@ object DownloadCompleteRunner: DownloadCompleteListener {
     var result: String = ""
     override fun downloadComplete(result: String) {
         this.result = result
+        MainActivity.downloadedGJson = result
         val fc = FeatureCollection.fromJson(result)
         if(fc!=null) {
             MapsActivity.features = fc.features()!!.toCollection(ArrayList())
-            MapsActivity.features_testing = fc
         }
     }
 }

@@ -3,13 +3,15 @@ package com.coinz.michaelabrezinova.coinz
 import android.content.Context
 import android.os.AsyncTask
 import java.net.URL
-import android.util.Log
 import com.mapbox.geojson.FeatureCollection
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import org.json.JSONException
+import org.json.JSONArray
 
 class DownloadFileTask(private val caller: DownloadCompleteListener):
         AsyncTask<String,Void,String>() {
@@ -61,10 +63,27 @@ object DownloadCompleteRunner: DownloadCompleteListener {
     var result: String = ""
     override fun downloadComplete(result: String) {
         this.result = result
-        MainActivity.downloadedGJson = result
-        val fc = FeatureCollection.fromJson(result)
-        if(fc!=null) {
-            MapsActivity.features = fc.features()!!.toCollection(ArrayList())
+        if (isStringJson(result)){
+            MainActivity.downloadedGJson = result
+            val fc = FeatureCollection.fromJson(result)
+            if(fc!=null) {
+                MapsActivity.features = fc.features()!!.toCollection(ArrayList())
+                var obj = JSONObject(result)
+                MapsActivity.rates = obj.getJSONObject("rates")
+            }
         }
     }
+}
+
+fun isStringJson(str: String): Boolean {
+    try {
+        JSONObject(str)
+    } catch (ex: JSONException) {
+        try {
+            JSONArray(str)
+        } catch (ex1: JSONException) {
+            return false
+        }
+    }
+    return true
 }

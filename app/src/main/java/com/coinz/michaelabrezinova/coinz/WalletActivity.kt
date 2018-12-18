@@ -9,6 +9,7 @@ import kotlinx.android.synthetic.main.activity_wallet.*
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
+import android.text.Html
 import android.text.TextUtils
 import android.util.Log
 import android.widget.*
@@ -25,8 +26,12 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
     private val tag= "WalletActivity"
     private var fireStore: FirebaseFirestore? = null
     private var userReference: DocumentReference? = null
-    private val preferencesFile = "MyPrefsFile"
     private var currentDate: String = ""
+
+    private var bankable: TextView? = null
+    private var gift: TextView? = null
+    private var spareChange: TextView? = null
+    private var overallScore: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +39,12 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         setSupportActionBar(toolbar)
         fireStore = FirebaseFirestore.getInstance()
         friendtransferButton.setOnClickListener(this)
+        banktransferButton.setOnClickListener(this)
+
+        bankable = findViewById(R.id.collectedBankable)
+        gift = findViewById(R.id.collectedGift)
+        spareChange = findViewById(R.id.collectedSpareChange)
+        overallScore = findViewById(R.id.overallScore)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
@@ -46,38 +57,30 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         fireStore?.firestoreSettings = settingsFireBase
         userReference = fireStore?.collection("users")
                 ?.document(MainActivity.currentUser!!.email!!)
+
         val sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss")
         currentDate = sdf.format(Date()).substring(0,10)
+
+        bankable?.text = MainActivity.user?.collectedBankable!!.toString()
+        gift?.text = MainActivity.user?.collectedGift!!.toString()
+        spareChange?.text = MainActivity.user?.collectedSpareChange!!.toString()
+        overallScore?.text = MainActivity.user?.overallScore!!.toString()
+
+        realTimeUpdateListener()
     }
 
     override fun onClick(v: View) {
         val i = v.id
         when (i) {
-            R.id.friendtransferButton -> transferToFriendDialog(v)
-            //R.id.changeThemeButton ->  mapView?.setStyleUrl("@string/mapbox_style_dark")
+            R.id.friendtransferButton -> transferToFriendDialog()
+            R.id.banktransferButton -> transferToBankDialog()
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        userReference?.update(
-                "lastDateSignedIn", currentDate,
-                "dailyCollected", MainActivity.user?.dailyCollected,
-                "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
-                "dailyScore", 555,
-                "collectedBankable", MainActivity.user?.collectedBankable,
-                "collectedSpareChange", MainActivity.user?.collectedSpareChange,
-                "collectedIds", MainActivity.user?.collectedIds,
-                "collectedGift", MainActivity.user?.collectedGift)
-        val editor = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE).edit()
-        editor.putString("lastDownloadDate", MainActivity.downloadDate)
-        editor.putString("lastDownloadedGJson", MainActivity.downloadedGJson)
-        editor.apply()
-    }
-
-    private fun transferToFriendDialog(view: View) {
+    private fun transferToFriendDialog() {
 
         val dialog = Dialog(this)
+        dialog.setCanceledOnTouchOutside(false)
         dialog.setContentView(R.layout.friend_transfer_dialog)
         dialog.setTitle("Transfer to a friend")
 
@@ -102,8 +105,44 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
             } else {
                 MainActivity.user!!.collectedGift
             }
-            if (validateForm(emailToTransfer,amountToTransfer,possession)) {
-                transferMoney(dialog, email, amount, isSpareChange)
+            if (validateFriendTransferForm(emailToTransfer,amountToTransfer,possession)) {
+                friendMoneyTransfer(dialog, email, amount, isSpareChange)
+            }
+        }
+
+        dialog.show()
+
+    }
+
+    private fun transferToBankDialog() {
+
+        val dialog = Dialog(this)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setContentView(R.layout.bank_transfer_dialog)
+        dialog.setTitle("Transfer to the bank")
+
+        //Cancel button, if clicked, closes the dialog without a change
+        val cancelButton = dialog.findViewById(R.id.cancelBankButton) as Button
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        val sendToFriendButton = dialog.findViewById(R.id.sendToBankButton) as Button
+        sendToFriendButton.setOnClickListener {
+            val amountToTransfer =
+                    dialog.findViewById<EditText>(R.id.fieldAmountToBankTransfer)
+            val amount = amountToTransfer.text.toString()
+
+            //Find selected radio button
+            val radioGroup = dialog.findViewById<RadioGroup>(R.id.SourceBankRadioGroup)
+            val selectedId = radioGroup.getCheckedRadioButtonId();
+            val radioButton =  dialog.findViewById<RadioButton>(selectedId)
+            val isCollected = selectedId==R.id.radioBankCollected
+            var possession = if (isCollected){
+                MainActivity.user!!.collectedBankable
+            } else {
+                MainActivity.user!!.collectedGift
+            }
+            if (validateBankForm(amountToTransfer,possession)) {
+                bankMoneyTransfer(dialog, amount, isCollected)
             }
         }
 
@@ -112,7 +151,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
     }
 
     //Checks if the fields for the email and password have been filled
-    private fun validateForm(emailToTransfer: EditText, amountToTransfer: EditText,
+    private fun validateFriendTransferForm(emailToTransfer: EditText, amountToTransfer: EditText,
                              possession: Int): Boolean {
         var valid = true
 
@@ -148,15 +187,26 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         return valid
     }
 
-    private fun transferMoney(dialog:Dialog, email: String, amount: String, isSpareChange: Boolean) {
+    private fun friendMoneyTransfer(
+            dialog:Dialog, email: String, amount: String, isSpareChange: Boolean) {
+
         val userReference =
                 fireStore?.collection("users")?.document(email)
         userReference?.get()
                 ?.addOnSuccessListener { document ->
                     if (document != null) {
-                        var gift = document.get("collectedGift").toString().toInt()
-                        userReference.update("collectedGift", gift + amount.toInt())
-                        updateUserValues(isSpareChange, amount.toInt())
+                        var originalGift = document.get("collectedGift").toString().toInt()
+                        userReference.update("collectedGift", originalGift + amount.toInt())
+                        if(isSpareChange){
+                            MainActivity.user?.collectedSpareChange =
+                                    MainActivity.user?.collectedSpareChange!!.minus(amount.toInt())
+                            spareChange?.text = MainActivity.user?.collectedSpareChange!!.toString()
+                        } else {
+                            MainActivity.user?.collectedGift =
+                                    MainActivity.user?.collectedGift!!.minus(amount.toInt())
+                            gift?.text = MainActivity.user?.collectedGift!!.toString()
+                        }
+                        updateUser()
                         dialog.dismiss()
                     } else {
                         Log.d(tag, "No such document")
@@ -168,15 +218,82 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
                 }
     }
 
-    private fun updateUserValues(isSpareChange: Boolean, amount: Int){
-        if(isSpareChange){
-            MainActivity.user?.collectedSpareChange =
-                    MainActivity.user?.collectedSpareChange!!.minus(amount)
-                    findViewById<TextView>(R.id.overallScore).setText(15)
-        } else {
-            MainActivity.user?.collectedGift =
-                    MainActivity.user?.collectedSpareChange!!.minus(amount)
+    //Checks if the amount field is correctly filled in
+    private fun validateBankForm(
+            amountToTransfer: EditText, possession: Int): Boolean {
+
+        val amount = amountToTransfer.text.toString()
+
+
+        when {
+            TextUtils.isEmpty(amount) -> {
+                amountToTransfer.error = "Required."
+                // Html.fromHtml("<font color='blue'>this is the error</font>")
+                return false
+            }
+            amount.toInt()==0 -> {
+                amountToTransfer.error = "Cannot bank nothing."
+                return false
+            }
+            amount.toInt()>possession -> {
+                amountToTransfer.error = "Insufficient funds."
+                return false
+            }
+            else -> amountToTransfer.error = null
         }
+        return true
     }
 
+    //Sends money to the bank account of the current user
+    private fun bankMoneyTransfer(
+            dialog:Dialog, amount: String, isCollected: Boolean) {
+
+        MainActivity.user?.overallScore = MainActivity.user?.overallScore!!.plus(amount.toInt())
+        overallScore?.text = Integer.toString(MainActivity.user?.overallScore!!)
+        if(isCollected){
+            MainActivity.user?.collectedBankable =
+                    MainActivity.user?.collectedBankable!!.minus(amount.toInt())
+            bankable?.text =
+                    Integer.toString(MainActivity.user?.collectedBankable!!)
+        } else {
+            MainActivity.user?.collectedGift =
+                    MainActivity.user?.collectedGift!!.minus(amount.toInt())
+            gift?.text =
+                    Integer.toString(MainActivity.user?.collectedGift!!)
+        }
+        updateUser()
+        dialog.dismiss()
+    }
+
+    //Updates user information in the database to stay sync
+    private fun updateUser() {
+        userReference?.update(
+                "lastDateSignedIn", currentDate,
+                "dailyCollected", MainActivity.user?.dailyCollected,
+                "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
+                "dailyScore", MainActivity.user?.dailyCollected,
+                "collectedBankable", MainActivity.user?.collectedBankable,
+                "collectedSpareChange", MainActivity.user?.collectedSpareChange,
+                "collectedIds", MainActivity.user?.collectedIds,
+                "collectedGift", MainActivity.user?.collectedGift,
+                "overallScore", MainActivity.user?.overallScore
+        )
+    }
+
+    private fun realTimeUpdateListener() {
+        userReference?.addSnapshotListener{ documentSnapshot, e ->
+            when {
+                e != null -> Log.e(tag, e.message)
+                documentSnapshot != null && documentSnapshot.exists() -> {
+                    with(documentSnapshot) {
+                        val collected = data?.get("collectedGift").toString().toInt()
+                        MainActivity.user?.collectedGift = collected
+                        var gift = findViewById<TextView>(R.id.collectedGift)
+                        gift?.text =
+                                Integer.toString(MainActivity.user?.collectedGift!!)
+                    }
+                }
+            }
+        }
+    }
 }

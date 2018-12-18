@@ -7,34 +7,14 @@
     android:layout_centerInParent="true"
     android:id="@+id/relativeLayout">
 
-
     <EditText
-        android:id="@+id/fieldEmailToTransfer"
+        android:id="@+id/fieldAmountToBankTransfer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:ems="10"
-        android:hint="Enter friend's email"
-        android:inputType="textEmailAddress"
-        android:textAlignment="center"
-        android:textSize="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.509"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/fieldAmountToTransfer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="92dp"
         android:ems="10"
         android:hint="Enter amount to transfer"
         android:inputType="number"
@@ -42,13 +22,12 @@
         android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fieldEmailToTransfer"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/SourceRadioGroup"
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
-        android:id="@+id/sendToFriendButton"
+        android:id="@+id/sendToBankButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -60,13 +39,13 @@
         app:backgroundTint="@color/fui_bgPhone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.739"
+        app:layout_constraintHorizontal_bias="0.734"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.908" />
 
     <Button
-        android:id="@+id/cancelButton"
+        android:id="@+id/cancelBankButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -78,13 +57,13 @@
         app:backgroundTint="@color/colorAccent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.27"
+        app:layout_constraintHorizontal_bias="0.265"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.908" />
 
     <RadioGroup
-        android:id="@+id/SourceRadioGroup"
+        android:id="@+id/SourceBankRadioGroup"
         android:layout_width="wrap_content"
         android:layout_height="32dp"
         android:layout_marginStart="8dp"
@@ -92,45 +71,45 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/fieldEmailToTransfer"
+        app:layout_constraintBottom_toTopOf="@+id/fieldAmountToBankTransfer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/transferToFriendTitle">
+        app:layout_constraintTop_toBottomOf="@+id/transferToBankTitle">
 
         <RadioButton
-            android:id="@+id/radioSpareChange"
+            android:id="@+id/radioBankGift"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:buttonTint="@color/fui_bgPhone"
             android:checked="true"
-            android:text="Spare Change" />
+            android:text="Gift" />
 
         <RadioButton
-            android:id="@+id/radioGift"
+            android:id="@+id/radioBankCollected"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:buttonTint="@color/fui_bgPhone"
-            android:text="Gift" />
+            android:text="Collected" />
 
     </RadioGroup>
 
     <TextView
-        android:id="@+id/transferToFriendTitle"
+        android:id="@+id/transferToBankTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Transfer to a friend"
+        android:text="Transfer to the bank"
         android:textColor="@color/colorPrimary"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.503"
+        app:layout_constraintHorizontal_bias="0.504"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.038" />
+        app:layout_constraintVertical_bias="0.086" />
 
 </android.support.constraint.ConstraintLayout>

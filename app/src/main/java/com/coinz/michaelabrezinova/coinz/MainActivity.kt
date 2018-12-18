@@ -1,5 +1,6 @@
 package com.coinz.michaelabrezinova.coinz
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.content.Intent
@@ -29,8 +30,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     companion object {
         private const val TAG = "EmailPassword"
-        var downloadDate: String? =""
-        var downloadedGJson: String? = ""
+        var downloadDate =""
+        var downloadedGJson = ""
         var currentUser: FirebaseUser? = null
         var user: User? = null
     }
@@ -59,6 +60,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         auth = FirebaseAuth.getInstance()
     }
 
+    @SuppressLint("SimpleDateFormat")
     public override fun onStart() {
         super.onStart()
 
@@ -192,10 +194,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 ?.addOnSuccessListener { document ->
                     if (document != null) {
                         Log.d(tag, "DocumentSnapshot data: " + document.data)
-                        user = document.toObject(User::class.java)
-                        userReference?.update("collectedGift",0)
+                        user = document.toObject(User::class.java)!!
                         if(user?.lastDateSignedIn!=currentDate) {
                             resetUser()
+                            updateUser()
                         }
                         //starts Maps activity
                         val intent = Intent(this, MapsActivity::class.java)
@@ -226,16 +228,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onStop() {
         super.onStop()
 
-        userReference?.update(
-                "lastDateSignedIn", currentDate,
-                "dailyCollected", user?.dailyCollected,
-                "dailyDistanceWalked", user?.dailyDistanceWalked,
-                "dailyScore", 555,
-                "collectedBankable", user?.collectedBankable,
-                "collectedSpareChange",user?.collectedSpareChange,
-                "collectedIds", user?.collectedIds,
-                "collectedGift", user?.collectedGift)
-
         Log.d(tag, "[onStop] Storing lastDownloadDate of $downloadDate")
         val editor = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE).edit()
         editor.putString("lastDownloadDate", downloadDate)
@@ -254,6 +246,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         MainActivity.user?.dailyScore = 0
         MainActivity.user?.lastDateSignedIn = currentDate
         MainActivity.user?.collectedGift = 0
+    }
+
+    private fun updateUser(){
+        userReference?.update(
+                "lastDateSignedIn", currentDate,
+                "dailyCollected", user?.dailyCollected,
+                "dailyDistanceWalked", user?.dailyDistanceWalked,
+                "dailyScore", user?.dailyScore,
+                "collectedBankable", user?.collectedBankable,
+                "collectedSpareChange",user?.collectedSpareChange,
+                "collectedIds", user?.collectedIds,
+                "collectedGift", user?.collectedGift,
+                "overallScore",user?.overallScore)
     }
 
 }

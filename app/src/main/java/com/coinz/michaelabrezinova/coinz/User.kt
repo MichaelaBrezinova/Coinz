@@ -1,5 +1,6 @@
 package com.coinz.michaelabrezinova.coinz
 
+//Class User corresponding to the user's information in the FireStore
 data class User (
         var collectedIds: ArrayList<Any?> = ArrayList(),
         var collectedBankable: Int = 0,

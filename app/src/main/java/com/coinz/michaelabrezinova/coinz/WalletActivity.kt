@@ -1,18 +1,16 @@
 package com.coinz.michaelabrezinova.coinz
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity;
 import android.view.View
-
 import kotlinx.android.synthetic.main.activity_wallet.*
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.text.Html
 import android.text.TextUtils
 import android.util.Log
 import android.widget.*
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
@@ -24,23 +22,34 @@ import java.util.*
 class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
     private val tag= "WalletActivity"
+
     private var fireStore: FirebaseFirestore? = null
+    private lateinit var auth: FirebaseAuth
     private var userReference: DocumentReference? = null
-    private var currentDate: String = ""
 
     private var bankable: TextView? = null
     private var gift: TextView? = null
     private var spareChange: TextView? = null
     private var overallScore: TextView? = null
 
+    private var currentDate: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_wallet)
         setSupportActionBar(toolbar)
+
+
         fireStore = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+
+        //Set buttons in the activity to be clickable
         friendtransferButton.setOnClickListener(this)
         banktransferButton.setOnClickListener(this)
+        signOutButton.setOnClickListener(this)
 
+        //Initialize textViews displaying scores
         bankable = findViewById(R.id.collectedBankable)
         gift = findViewById(R.id.collectedGift)
         spareChange = findViewById(R.id.collectedSpareChange)
@@ -51,111 +60,109 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
     public override fun onStart() {
         super.onStart()
+
+        //Set fireStore settings
         val settingsFireBase = FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build()
         fireStore?.firestoreSettings = settingsFireBase
+
+        //Initialize user's fireBase information, i.e. get reference to user's document
         userReference = fireStore?.collection("users")
                 ?.document(MainActivity.currentUser!!.email!!)
 
-        val sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss")
+        //Set the current date
+        val sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss", Locale.US)
         currentDate = sdf.format(Date()).substring(0,10)
 
+        //Set the text of the textViews to correspond to given values of variables
         bankable?.text = MainActivity.user?.collectedBankable!!.toString()
         gift?.text = MainActivity.user?.collectedGift!!.toString()
         spareChange?.text = MainActivity.user?.collectedSpareChange!!.toString()
         overallScore?.text = MainActivity.user?.overallScore!!.toString()
 
+        //Initialize listener to updates from fireStore
         realTimeUpdateListener()
     }
 
+    //Set up functions called by pressing given buttons
     override fun onClick(v: View) {
         val i = v.id
         when (i) {
             R.id.friendtransferButton -> transferToFriendDialog()
             R.id.banktransferButton -> transferToBankDialog()
+            R.id.signOutButton -> signOut()
         }
     }
 
+    //Sign out the user and call the login screen - MainActivity
+    private fun signOut() {
+        auth.signOut()
+        MainActivity.currentUser = null
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+    }
+
+    //Open dialog with option to transfer money to friend
     private fun transferToFriendDialog() {
 
         val dialog = Dialog(this)
+        //Disable canceling the dialog from outside
         dialog.setCanceledOnTouchOutside(false)
         dialog.setContentView(R.layout.friend_transfer_dialog)
         dialog.setTitle("Transfer to a friend")
 
-        //Cancel button, if clicked, closes the dialog without a change
+        //Clicking on cancel button closes the dialog without making any change
         val cancelButton = dialog.findViewById(R.id.cancelButton) as Button
         cancelButton.setOnClickListener { dialog.dismiss() }
 
+        //Send button, calls sendToFriend function verifying the fields and if valid sending money
         val sendToFriendButton = dialog.findViewById(R.id.sendToFriendButton) as Button
-        sendToFriendButton.setOnClickListener {
-            val emailToTransfer = dialog.findViewById<EditText>(R.id.fieldEmailToTransfer)
-            val amountToTransfer = dialog.findViewById<EditText>(R.id.fieldAmountToTransfer)
-            val email = emailToTransfer.text.toString()
-            val amount = amountToTransfer.text.toString()
-
-            //Find selected radio button
-            val radioGroup = dialog.findViewById<RadioGroup>(R.id.SourceRadioGroup)
-            val selectedId = radioGroup.getCheckedRadioButtonId();
-            val radioButton =  dialog.findViewById<RadioButton>(selectedId)
-            val isSpareChange = selectedId==R.id.radioSpareChange
-            var possession = if (isSpareChange){
-                MainActivity.user!!.collectedSpareChange
-            } else {
-                MainActivity.user!!.collectedGift
-            }
-            if (validateFriendTransferForm(emailToTransfer,amountToTransfer,possession)) {
-                friendMoneyTransfer(dialog, email, amount, isSpareChange)
-            }
-        }
+        sendToFriendButton.setOnClickListener {sendToFriendClicked(dialog) }
 
         dialog.show()
 
     }
 
-    private fun transferToBankDialog() {
+    //Gets data from input fields, verifies validity and initializes transfer
+    private fun sendToFriendClicked(dialog: Dialog) {
 
-        val dialog = Dialog(this)
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setContentView(R.layout.bank_transfer_dialog)
-        dialog.setTitle("Transfer to the bank")
+        //Input fields data
+        val emailToTransfer = dialog.findViewById<EditText>(R.id.fieldEmailToTransfer)
+        val amountToTransfer = dialog.findViewById<EditText>(R.id.fieldAmountToTransfer)
+        val email = emailToTransfer.text.toString()
+        val amount = amountToTransfer.text.toString()
 
-        //Cancel button, if clicked, closes the dialog without a change
-        val cancelButton = dialog.findViewById(R.id.cancelBankButton) as Button
-        cancelButton.setOnClickListener { dialog.dismiss() }
+        //Get source of money to transfer - SpareChange or Gift
+        val radioGroup = dialog.findViewById<RadioGroup>(R.id.SourceRadioGroup)
+        val selectedId = radioGroup.checkedRadioButtonId
+        val isSpareChange = selectedId==R.id.radioSpareChange
 
-        val sendToFriendButton = dialog.findViewById(R.id.sendToBankButton) as Button
-        sendToFriendButton.setOnClickListener {
-            val amountToTransfer =
-                    dialog.findViewById<EditText>(R.id.fieldAmountToBankTransfer)
-            val amount = amountToTransfer.text.toString()
-
-            //Find selected radio button
-            val radioGroup = dialog.findViewById<RadioGroup>(R.id.SourceBankRadioGroup)
-            val selectedId = radioGroup.getCheckedRadioButtonId();
-            val radioButton =  dialog.findViewById<RadioButton>(selectedId)
-            val isCollected = selectedId==R.id.radioBankCollected
-            var possession = if (isCollected){
-                MainActivity.user!!.collectedBankable
-            } else {
-                MainActivity.user!!.collectedGift
-            }
-            if (validateBankForm(amountToTransfer,possession)) {
-                bankMoneyTransfer(dialog, amount, isCollected)
-            }
+        //Gets disposable money depending on the source - Spare Change or Gift
+        var possession = if (isSpareChange){
+            MainActivity.user!!.collectedSpareChange
+        } else {
+            MainActivity.user!!.collectedGift
         }
 
-        dialog.show()
-
+        //If fields are valid, initialize transfer
+        if (validateFriendTransferForm(emailToTransfer,amountToTransfer,possession)) {
+            friendMoneyTransfer(dialog, email, amount.toInt(), isSpareChange)
+        }
     }
 
-    //Checks if the fields for the email and password have been filled
-    private fun validateFriendTransferForm(emailToTransfer: EditText, amountToTransfer: EditText,
-                             possession: Int): Boolean {
+    //Checks if the fields for the email and password have been filled correctly
+    private fun validateFriendTransferForm(
+            emailToTransfer: EditText, amountToTransfer: EditText, possession: Int): Boolean {
+
+        //Input in the fields
+        val email = emailToTransfer.text.toString()
+        val amount = amountToTransfer.text.toString()
+
+        //Validity tracker
         var valid = true
 
-        val email = emailToTransfer.text.toString()
+        //Check email field
         when {
             TextUtils.isEmpty(email) -> {
                 emailToTransfer.error = "Required."
@@ -168,7 +175,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
             else -> emailToTransfer.error = null
         }
 
-        val amount = amountToTransfer.text.toString()
+        //Check amount field
         when {
             TextUtils.isEmpty(amount) -> {
                 amountToTransfer.error = "Required."
@@ -184,33 +191,46 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
             }
             else -> amountToTransfer.error = null
         }
+
+        //Return if the fields are valid or not
         return valid
     }
 
+    //Initialize transfer to a friend
     private fun friendMoneyTransfer(
-            dialog:Dialog, email: String, amount: String, isSpareChange: Boolean) {
+            dialog:Dialog, email: String, amount: Int, isSpareChange: Boolean) {
 
+        //Get reference to friend's foreStore document, get the current value of collectedGift
+        //and add the amount the user is transfering to it
         val userReference =
                 fireStore?.collection("users")?.document(email)
         userReference?.get()
                 ?.addOnSuccessListener { document ->
-                    if (document != null) {
-                        var originalGift = document.get("collectedGift").toString().toInt()
-                        userReference.update("collectedGift", originalGift + amount.toInt())
+
+                    //Checks if the user's collectedGift is not null( the user exists), if not
+                    //cancels the transaction
+                    if (document?.get("collectedGift") != null) {
+                        val originalGift = document.get("collectedGift").toString().toInt()
+                        userReference.update("collectedGift", originalGift + amount)
+
+                        //update user information
                         if(isSpareChange){
                             MainActivity.user?.collectedSpareChange =
-                                    MainActivity.user?.collectedSpareChange!!.minus(amount.toInt())
+                                    MainActivity.user?.collectedSpareChange!!.minus(amount)
                             spareChange?.text = MainActivity.user?.collectedSpareChange!!.toString()
                         } else {
                             MainActivity.user?.collectedGift =
-                                    MainActivity.user?.collectedGift!!.minus(amount.toInt())
+                                    MainActivity.user?.collectedGift!!.minus(amount)
                             gift?.text = MainActivity.user?.collectedGift!!.toString()
                         }
                         updateUser()
+
                         dialog.dismiss()
                     } else {
-                        Log.d(tag, "No such document")
-
+                        //Notifies the user that there is no user with such email address.
+                        Log.d(tag, "No such user")
+                        dialog.findViewById<EditText>(R.id.fieldEmailToTransfer).error =
+                                "User does not exist."
                     }
                 }
                 ?.addOnFailureListener { exception ->
@@ -218,17 +238,59 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
                 }
     }
 
+    //Open dialog with option to transfer money to the bank
+    private fun transferToBankDialog() {
+
+        val dialog = Dialog(this)
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.setContentView(R.layout.bank_transfer_dialog)
+        dialog.setTitle("Transfer to the bank")
+
+        //Cancel button, if clicked, closes the dialog without any change
+        val cancelButton = dialog.findViewById(R.id.cancelBankButton) as Button
+        cancelButton.setOnClickListener { dialog.dismiss() }
+
+        //Send button, calls sendToBank function verifying the fields and if valid sending money
+        val sendToBankButton = dialog.findViewById(R.id.sendToBankButton) as Button
+        sendToBankButton.setOnClickListener {sendToBankClicked(dialog)}
+
+        dialog.show()
+
+    }
+
+    private fun sendToBankClicked(dialog: Dialog) {
+        //Input fields data
+        val amountToTransfer =
+                dialog.findViewById<EditText>(R.id.fieldAmountToBankTransfer)
+        val amount = amountToTransfer.text.toString()
+
+        //Get source of money to transfer - Gift or CollectedBankable
+        val radioGroup = dialog.findViewById<RadioGroup>(R.id.SourceBankRadioGroup)
+        val selectedId = radioGroup.checkedRadioButtonId
+        val isCollectedBankable = selectedId==R.id.radioBankCollected
+
+        //Gets disposable money depending on the source - Gift or CollectedBankable
+        var possession = if (isCollectedBankable){
+            MainActivity.user!!.collectedBankable
+        } else {
+            MainActivity.user!!.collectedGift
+        }
+
+        //If fields are valid, initialize transfer
+        if (validateBankForm(amountToTransfer,possession)) {
+            bankMoneyTransfer(dialog, amount.toInt(), isCollectedBankable)
+        }
+    }
+
     //Checks if the amount field is correctly filled in
     private fun validateBankForm(
             amountToTransfer: EditText, possession: Int): Boolean {
 
+        //Checks if the amount entered is valid
         val amount = amountToTransfer.text.toString()
-
-
         when {
             TextUtils.isEmpty(amount) -> {
                 amountToTransfer.error = "Required."
-                // Html.fromHtml("<font color='blue'>this is the error</font>")
                 return false
             }
             amount.toInt()==0 -> {
@@ -244,28 +306,30 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         return true
     }
 
-    //Sends money to the bank account of the current user
+    //Transfers money to the bank account of the current user
     private fun bankMoneyTransfer(
-            dialog:Dialog, amount: String, isCollected: Boolean) {
+            dialog:Dialog, amount: Int, isCollectedBankable: Boolean) {
 
-        MainActivity.user?.overallScore = MainActivity.user?.overallScore!!.plus(amount.toInt())
+        //Updates local variables(depending on the source of money) and then updates fireBase
+        MainActivity.user?.overallScore = MainActivity.user?.overallScore!!.plus(amount)
         overallScore?.text = Integer.toString(MainActivity.user?.overallScore!!)
-        if(isCollected){
+        if(isCollectedBankable){
             MainActivity.user?.collectedBankable =
-                    MainActivity.user?.collectedBankable!!.minus(amount.toInt())
+                    MainActivity.user?.collectedBankable!!.minus(amount)
             bankable?.text =
                     Integer.toString(MainActivity.user?.collectedBankable!!)
         } else {
             MainActivity.user?.collectedGift =
-                    MainActivity.user?.collectedGift!!.minus(amount.toInt())
+                    MainActivity.user?.collectedGift!!.minus(amount)
             gift?.text =
                     Integer.toString(MainActivity.user?.collectedGift!!)
         }
         updateUser()
+
         dialog.dismiss()
     }
 
-    //Updates user information in the database to stay sync
+    //Updates user information in the fireBase to stay sync
     private fun updateUser() {
         userReference?.update(
                 "lastDateSignedIn", currentDate,
@@ -280,15 +344,17 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         )
     }
 
+    //Real time updates from the fireBase, synchronizes text displaying gift money amount and the
+    //local variable holding the gift money amount
     private fun realTimeUpdateListener() {
         userReference?.addSnapshotListener{ documentSnapshot, e ->
             when {
                 e != null -> Log.e(tag, e.message)
                 documentSnapshot != null && documentSnapshot.exists() -> {
                     with(documentSnapshot) {
-                        val collected = data?.get("collectedGift").toString().toInt()
-                        MainActivity.user?.collectedGift = collected
-                        var gift = findViewById<TextView>(R.id.collectedGift)
+                        val collectedGift = data?.get("collectedGift").toString().toInt()
+                        MainActivity.user?.collectedGift = collectedGift
+                        val gift = findViewById<TextView>(R.id.collectedGift)
                         gift?.text =
                                 Integer.toString(MainActivity.user?.collectedGift!!)
                     }

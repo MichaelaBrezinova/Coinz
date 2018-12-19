@@ -44,8 +44,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.mapbox.mapboxsdk.style.layers.BackgroundLayer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import kotlinx.android.synthetic.main.activity_maps.openWalletButton
 import kotlinx.android.synthetic.main.activity_maps.changeThemeButton
 import org.json.JSONObject
@@ -58,20 +56,23 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
     private val tag= "MapsActivity"
 
+    // User information and reference
     private var user: FirebaseUser? = null
-    private var firestore: FirebaseFirestore? = null
+    private var fireStore: FirebaseFirestore? = null
     private var userReference: DocumentReference? = null
 
+    // Map and markers
     private var mapView: MapView? = null
     private var map: MapboxMap? = null
-    private var layer: Layer? = null
     private var markers: ArrayList<Marker>? = null
 
+    // Location updates information
     private lateinit var permissionManager: PermissionsManager
     private lateinit var originLocation: Location
     private lateinit var locationEngine : LocationEngine
     private lateinit var locationLayerPlugin: LocationLayerPlugin
 
+    // Local information
     private val preferencesFile = "MyPrefsFile"
     private lateinit var currentDate: String
     private var darkTheme: Boolean = false
@@ -83,15 +84,18 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        user = MainActivity.currentUser
 
-        //Initialize fireStore
-        firestore = FirebaseFirestore.getInstance()
+        //Initialize user and fireStore
+        user = MainActivity.currentUser
+        fireStore = FirebaseFirestore.getInstance()
 
         setContentView(R.layout.activity_maps)
+
+        //Set listeners for the buttons used
         openWalletButton?.setOnClickListener(this)
         changeThemeButton?.setOnClickListener(this)
 
+        //Initialize map
         Mapbox.getInstance(applicationContext, getString(R.string.access_token))
         mapView = findViewById(R.id.mapboxMapView)
         mapView?.onCreate(savedInstanceState)
@@ -99,21 +103,22 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
     }
 
+    //If map is ready and non-null set up its settings, enable location and display the coins
     override fun onMapReady(mapboxMap: MapboxMap?) {
         if(mapboxMap ==null){
             Log.d(tag,"[onMapReady] mapboxMap is null")
         } else {
             Log.d(tag,"[onMapReady] map has been set")
             map = mapboxMap
-
             map?.uiSettings?.isCompassEnabled = true
             map?.uiSettings?.isZoomControlsEnabled = true
-            map?.setOnMarkerClickListener(this)
             enableLocation()
             displayCoins()
+            map?.setOnMarkerClickListener(this)
         }
     }
 
+    //Enable location depending on permissions
     private fun enableLocation() {
         if(PermissionsManager.areLocationPermissionsGranted(this)) {
             Log.d(tag, "Permissions are granted")
@@ -136,11 +141,11 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
             activate()
         }
 
-        var lastLocation = locationEngine.lastLocation
+        //Set up location to be the last location
+        val lastLocation = locationEngine.lastLocation
         if (lastLocation != null) {
             originLocation = lastLocation
             setCameraPosition(lastLocation)
-
         } else {
             locationEngine.addLocationEngineListener(this)
         }
@@ -148,10 +153,19 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
     @SuppressWarnings("MissingPermission")
     private fun initializeLocationLayer() {
-        locationLayerPlugin = LocationLayerPlugin(mapView!!, map!!, locationEngine)
-        locationLayerPlugin.setLocationLayerEnabled(true)
-        locationLayerPlugin.cameraMode = CameraMode.TRACKING
-        locationLayerPlugin.renderMode = RenderMode.NORMAL
+        if (mapView == null) { Log.d(tag, "mapView is null") }
+        else {
+            if (map == null) { Log.d(tag, "map is null") }
+            else {
+                locationLayerPlugin = LocationLayerPlugin(mapView!!,
+                        map!!, locationEngine)
+                locationLayerPlugin.apply {
+                    setLocationLayerEnabled(true)
+                    cameraMode = CameraMode.TRACKING
+                    renderMode = RenderMode.NORMAL
+                }
+            }
+        }
     }
 
     private fun setCameraPosition(location: Location) {
@@ -174,6 +188,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                     baseContext, "Please, grant the permission to use the location, " +
                     "otherwise, you will not be able to enjoy the game fully!",
                     Toast.LENGTH_SHORT).show()
+            mapView?.isClickable = false
         }
     }
 
@@ -190,14 +205,15 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
             setCameraPosition(originLocation)
         }
     }
-
+    
+    //TODO:Disable marker click if no location is available
     override fun onMarkerClick( marker: Marker): Boolean {
-        Log.d(tag,"[onMarkerClick] marker $marker has been clicked")
+        Log.d(tag,"[onMarkerClick]  $marker has been clicked")
         var markerLocation: Location? = Location("")
         markerLocation?.longitude = marker.position.longitude
         markerLocation?.latitude = marker.position.latitude
 
-        if(originLocation.distanceTo(markerLocation)<=25) {
+        //if(originLocation.distanceTo(markerLocation)<=25) {
 
             map?.removeMarker(marker)
             markers?.remove(marker)
@@ -206,6 +222,8 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                     MainActivity.user?.dailyCollected?.plus(1)!!
 
             var value = marker.snippet.toDouble().roundToInt()
+            Log.d(tag,"[onMarkerClick]  $marker value is $value")
+
             var countCollected = findViewById<TextView>(R.id.CountCollected)
             countCollected.text = Integer.toString(MainActivity.user?.dailyCollected!!)
 
@@ -217,7 +235,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                         MainActivity.user!!.collectedSpareChange.plus(value)
             }
             updateUser()
-        }
+        //}
         return true
     }
 
@@ -231,10 +249,10 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
     override fun onStart() {
         super.onStart()
 
-        //if (PermissionsManager.areLocationPermissionsGranted(this)) {
-        //    locationEngine.requestLocationUpdates()
-        //    locationLayerPlugin.onStart()
-        //}
+        /*if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            locationEngine.requestLocationUpdates()
+            locationLayerPlugin.onStart()
+        }*/
 
         val sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss")
         currentDate = sdf.format(Date()).substring(0,10)
@@ -242,11 +260,11 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         val settingsFireBase = FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
                 .build()
-        firestore?.firestoreSettings = settingsFireBase
-        userReference = firestore?.collection("users")
+        fireStore?.firestoreSettings = settingsFireBase
+        userReference = fireStore?.collection("users")
                 ?.document(MainActivity.currentUser!!.email!!)
 
-        if(MainActivity.downloadDate!=currentDate){
+        if(MainActivity.downloadDate!=currentDate || MainActivity.downloadedGJson ==""){
             downloadCoins()
         } else {
             val obj = JSONObject(MainActivity.downloadedGJson)

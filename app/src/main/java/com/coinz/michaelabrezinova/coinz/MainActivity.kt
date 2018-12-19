@@ -26,7 +26,7 @@ import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
-    private val tag= "Login"
+    private val tag= "LoginActivity"
 
     companion object {
         private const val TAG = "EmailPassword"
@@ -79,9 +79,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             updateUI()
         }
 
-        val downloadInformation = getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
-        downloadDate = downloadInformation.getString("lastDownloadDate", "")
-        downloadedGJson = downloadInformation.getString("lastDownloadedGJson", "")
+        val downloadInformation =
+                getSharedPreferences(preferencesFile, Context.MODE_PRIVATE)
+        downloadDate = downloadInformation.getString("lastDownloadDate", "")!!
+        downloadedGJson = downloadInformation.getString("lastDownloadedGJson", "")!!
         Log.d(tag, "[onStart] Recalled lastDownloadDate is ’$downloadDate’")
         Log.d(tag, "[onStart] Recalled lastDownloadedGJson is ’$downloadedGJson")
 
@@ -152,11 +153,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                 Toast.LENGTH_SHORT).show()
                     }
                 }
-    }
-
-    private fun signOut() {
-        auth.signOut()
-        updateUI()
     }
 
     //Checks if the fields for the email and password have been filled

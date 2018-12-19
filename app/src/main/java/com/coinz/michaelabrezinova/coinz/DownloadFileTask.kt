@@ -68,7 +68,7 @@ object DownloadCompleteRunner: DownloadCompleteListener {
             val fc = FeatureCollection.fromJson(result)
             if(fc!=null) {
                 MapsActivity.features = fc.features()!!.toCollection(ArrayList())
-                var obj = JSONObject(result)
+                val obj = JSONObject(result)
                 MapsActivity.rates = obj.getJSONObject("rates")
             }
         }

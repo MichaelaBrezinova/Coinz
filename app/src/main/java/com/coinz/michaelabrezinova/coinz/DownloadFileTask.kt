@@ -1,6 +1,5 @@
 package com.coinz.michaelabrezinova.coinz
 
-import android.content.Context
 import android.os.AsyncTask
 import java.net.URL
 import com.mapbox.geojson.FeatureCollection
@@ -60,11 +59,11 @@ interface DownloadCompleteListener {
 }
 
 object DownloadCompleteRunner: DownloadCompleteListener {
-    var result: String = ""
+    private var result: String = ""
     override fun downloadComplete(result: String) {
         this.result = result
         if (isStringJson(result)){
-            MainActivity.downloadedGJson = result
+            MapsActivity.downloadedGJson = result
             val fc = FeatureCollection.fromJson(result)
             if(fc!=null) {
                 MapsActivity.features = fc.features()!!.toCollection(ArrayList())
@@ -75,12 +74,13 @@ object DownloadCompleteRunner: DownloadCompleteListener {
     }
 }
 
-fun isStringJson(str: String): Boolean {
+//Check if the result string is proper json string, to prevent errors
+fun isStringJson(result: String): Boolean {
     try {
-        JSONObject(str)
+        JSONObject(result)
     } catch (ex: JSONException) {
         try {
-            JSONArray(str)
+            JSONArray(result)
         } catch (ex1: JSONException) {
             return false
         }

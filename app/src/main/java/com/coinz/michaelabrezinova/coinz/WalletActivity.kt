@@ -1,23 +1,19 @@
 package com.coinz.michaelabrezinova.coinz
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatActivity
 import android.view.View
 import kotlinx.android.synthetic.main.activity_wallet.*
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
-import android.util.Log
 import android.widget.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
-import kotlinx.android.synthetic.main.activity_main.*
-import java.text.SimpleDateFormat
+import timber.log.Timber
 import java.util.*
-
 
 class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
@@ -38,7 +34,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_wallet)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(toolbar2)
 
 
         fireStore = FirebaseFirestore.getInstance()
@@ -72,8 +68,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
                 ?.document(MainActivity.currentUser!!.email!!)
 
         //Set the current date
-        val sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss", Locale.US)
-        currentDate = sdf.format(Date()).substring(0,10)
+        currentDate = MainActivity.currentDate
 
         //Set the text of the textViews to correspond to given values of variables
         bankable?.text = MainActivity.user?.collectedBankable!!.toString()
@@ -139,7 +134,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         val isSpareChange = selectedId==R.id.radioSpareChange
 
         //Gets disposable money depending on the source - Spare Change or Gift
-        var possession = if (isSpareChange){
+        val possession = if (isSpareChange){
             MainActivity.user!!.collectedSpareChange
         } else {
             MainActivity.user!!.collectedGift
@@ -228,13 +223,13 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
                         dialog.dismiss()
                     } else {
                         //Notifies the user that there is no user with such email address.
-                        Log.d(tag, "No such user")
+                        Timber.tag(tag).d( "No such user")
                         dialog.findViewById<EditText>(R.id.fieldEmailToTransfer).error =
                                 "User does not exist."
                     }
                 }
                 ?.addOnFailureListener { exception ->
-                    Log.d(tag, "get failed with ", exception)
+                    Timber.tag(tag).d(exception, "get failed with ")
                 }
     }
 
@@ -270,7 +265,7 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         val isCollectedBankable = selectedId==R.id.radioBankCollected
 
         //Gets disposable money depending on the source - Gift or CollectedBankable
-        var possession = if (isCollectedBankable){
+        val possession = if (isCollectedBankable){
             MainActivity.user!!.collectedBankable
         } else {
             MainActivity.user!!.collectedGift
@@ -312,17 +307,15 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
         //Updates local variables(depending on the source of money) and then updates fireBase
         MainActivity.user?.overallScore = MainActivity.user?.overallScore!!.plus(amount)
-        overallScore?.text = Integer.toString(MainActivity.user?.overallScore!!)
+        overallScore?.text = MainActivity.user?.overallScore!!.toString()
         if(isCollectedBankable){
             MainActivity.user?.collectedBankable =
                     MainActivity.user?.collectedBankable!!.minus(amount)
-            bankable?.text =
-                    Integer.toString(MainActivity.user?.collectedBankable!!)
+            bankable?.text = MainActivity.user?.collectedBankable!!.toString()
         } else {
             MainActivity.user?.collectedGift =
                     MainActivity.user?.collectedGift!!.minus(amount)
-            gift?.text =
-                    Integer.toString(MainActivity.user?.collectedGift!!)
+            gift?.text = MainActivity.user?.collectedGift!!.toString()
         }
         updateUser()
 
@@ -349,14 +342,13 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
     private fun realTimeUpdateListener() {
         userReference?.addSnapshotListener{ documentSnapshot, e ->
             when {
-                e != null -> Log.e(tag, e.message)
+                e != null -> Timber.tag(tag).e( e.message)
                 documentSnapshot != null && documentSnapshot.exists() -> {
                     with(documentSnapshot) {
                         val collectedGift = data?.get("collectedGift").toString().toInt()
                         MainActivity.user?.collectedGift = collectedGift
                         val gift = findViewById<TextView>(R.id.collectedGift)
-                        gift?.text =
-                                Integer.toString(MainActivity.user?.collectedGift!!)
+                        gift?.text =MainActivity.user?.collectedGift!!.toString()
                     }
                 }
             }

@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+            android:id="@+id/toolbar2"
             android:layout_width="500dp"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
@@ -69,20 +69,20 @@
         app:srcCompat="@drawable/bank" />
 
     <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="187dp"
-        android:layout_height="176dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.168"
-        app:srcCompat="@drawable/circle" />
+    android:id="@+id/purplecircle"
+    android:layout_width="187dp"
+    android:layout_height="176dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="8dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.502"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0.168"
+    app:srcCompat="@drawable/circle" />
 
     <TextView
         android:id="@+id/overallScoreSign"
@@ -217,7 +217,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
+        app:layout_constraintTop_toBottomOf="@+id/purplecircle"
         app:layout_constraintVertical_bias="0.089" />
 
     <TextView

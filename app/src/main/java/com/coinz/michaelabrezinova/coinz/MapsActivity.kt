@@ -184,7 +184,10 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         //Dialog why access needed
         Timber.tag(tag).d( "Permissions: $permissionsToExplain")
         // Present popup message or dialog
-        //TODO: add popup
+        Toast.makeText(
+                baseContext, "You need to accept location permissions, " +
+                "otherwise you will not be able to enjoy the game fully!",
+                Toast.LENGTH_SHORT).show()
     }
 
     //Check if the permissions are granted, if not, display toast and disable clicking on the map
@@ -195,8 +198,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         } else {
             //Display toast explaining why permission to use location is needed
             Toast.makeText(
-                    baseContext, "Please, grant the permission to use the location, " +
-                    "otherwise, you will not be able to enjoy the game fully!",
+                    baseContext, "Location updates not granted, map is just in a view mode.",
                     Toast.LENGTH_SHORT).show()
             mapView?.isClickable = false
         }
@@ -228,11 +230,6 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
     @SuppressWarnings("MissingPermission")
     override fun onStart() {
         super.onStart()
-
-        /*if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            locationEngine.requestLocationUpdates()
-            locationLayerPlugin.onStart()
-        }*/
 
         //Current date is initialized
         currentDate = MainActivity.sdf?.format(Date())?.substring(0,10)!!
@@ -273,14 +270,14 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
         //Set up alarm to check the time and date
         val repeatTime = 600 //Repeat time 10 minutes
-        val processTimer: AlarmManager =
+        val timeChecker: AlarmManager =
                 applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(applicationContext, ProcessTimeReceiver::class.java)
         val pendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(
                         this, 0,  intent, PendingIntent.FLAG_UPDATE_CURRENT)
         //Repeat alarm every 10 seconds
-        processTimer.setRepeating(AlarmManager.RTC_WAKEUP,
+        timeChecker.setRepeating(AlarmManager.RTC_WAKEUP,
                 System.currentTimeMillis(), (repeatTime*10000).toLong(), pendingIntent)
 
         //Start the update listener for updates from fireStore
@@ -320,8 +317,8 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         val intent = Intent(this, ProcessTimeReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
                 this, 0, intent, 0)
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
+        val timeChecker = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        timeChecker.cancel(pendingIntent)
 
         locationEngine.removeLocationUpdates()
         locationLayerPlugin.onStop()
@@ -372,6 +369,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         try {
             if(originLocation.distanceTo(markerLocation)<=25) {
 
+                val value = marker.snippet.toDouble().roundToInt()
                 //Marker removed
                 map?.removeMarker(marker)
                 markers?.remove(marker)
@@ -388,7 +386,6 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                 //Value of the coin is extracted and added to user's variable storing collected
                 //bankable coins(if number of daily collected is <=25) or collected spare change
                 //(if the number of collected coins is >25)
-                val value = marker.snippet.toDouble().roundToInt()
                 Timber.tag(tag).d("[onMarkerClick]  $marker value is $value")
                 if(MainActivity.user?.dailyCollected!!<=25){
                     MainActivity.user!!.collectedBankable =
@@ -512,7 +509,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         //Set color depending on the currency
         when (currency) {
             "SHIL" ->
-                DrawableCompat.setTint(vectorDrawable, Color.parseColor("#292e1e"))
+                DrawableCompat.setTint(vectorDrawable, Color.parseColor("#8795e1"))
             "PENY" ->
                 DrawableCompat.setTint(vectorDrawable, Color.parseColor("#e8d17f"))
             "QUID" ->
@@ -541,16 +538,21 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
 
     //Updates user information to stay synchronized with the fireStore
     private fun updateUser() {
-        userReference?.update(
+        try{ userReference?.update(
                 "lastDateSignedIn", currentDate,
                 "dailyCollected", MainActivity.user?.dailyCollected,
                 "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
-                "dailyScore", MainActivity.user?.dailyCollected,
                 "collectedBankable", MainActivity.user?.collectedBankable,
                 "collectedSpareChange", MainActivity.user?.collectedSpareChange,
                 "collectedIds", MainActivity.user?.collectedIds,
                 "collectedGift", MainActivity.user?.collectedGift,
-                "overallScore", MainActivity.user?.overallScore)
+                "bankAccount", MainActivity.user?.bankAccount)
+        } catch(e:Exception) {
+            Timber.tag(tag).d( e,"[updateUser] get failed with ")
+            Toast.makeText(
+                    baseContext, "Cannot update user info! Check your internet connection.",
+                    Toast.LENGTH_SHORT).show()
+        }
     }
 
     //Real time updates from the fireBase, synchronizes the local variable holding the gift money

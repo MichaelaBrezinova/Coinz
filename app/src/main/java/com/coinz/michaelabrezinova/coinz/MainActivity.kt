@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss", Locale.US)
         currentDate = sdf?.format(Date())?.substring(0,10)!!
 
-        user = User(ArrayList(), 0, 0, 0, 0, 0, 0, 0, currentDate)
+        user = User(ArrayList(), 0, 0, 0, 0, 0, 0, currentDate)
         //Set the fireStore settings
         val settingsFireBase = FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         currentUser = auth.currentUser
                         val newUserContent = mapOf(
                                 "dailyDistanceWalked" to 0,
-                                "overallScore" to 0,
+                                "bankAccount" to 0,
                                 "dailyScore" to 0,
                                 "dailyCollected" to 0,
                                 "collectedIds" to ArrayList<String>(),
@@ -214,7 +214,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                                     String.format("DocumentSnapshot data: " + document.data))
                             user = document.toObject(User::class.java)!!
                             if(user?.lastDateSignedIn!=currentDate) {
-                                resetUser(user?.overallScore!!)
+                                resetUser(user?.bankAccount!!)
                                 updateUser()
                             }
                             //starts Maps activity
@@ -223,11 +223,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         } catch(e:Exception) {
                             Timber.tag(tag).d("[proceedToGame] wrong fireStore info")
                             //User has wrong information in the fireStore, reset their information
-                            //try to retrieve overallScore
-                            val overallScore = document.get("overallScore")
+                            //try to retrieve bankAccount score
+                            val bankAccount = document.get("bankAccount")
                                     .toString().toIntOrNull()
-                            if(overallScore!=null){
-                                resetUser(overallScore)
+                            if(bankAccount!=null){
+                                resetUser(bankAccount)
                                 updateUser()
                             }
                             Toast.makeText(
@@ -237,30 +237,42 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                         }
                     } else {
                         Timber.tag(tag).d( "No such document")
+                        Toast.makeText(
+                                baseContext, "Cannot proceed! Check your internet " +
+                                "connection and information entered!",
+                                Toast.LENGTH_SHORT).show()
                     }
                 }
                 ?.addOnFailureListener { exception ->
                     Timber.tag(tag).d( exception,"get failed with ")
+                    Toast.makeText(
+                            baseContext, "Cannot proceed! Check your internet connection.",
+                            Toast.LENGTH_SHORT).show()
                 }
     }
 
     //resetUser is used when the last date the user has signed in is not today, i.e. all his
     //data are reset for the new day
-    private fun resetUser(overallScore: Int) {
-        user = User(ArrayList(), 0, 0, 0, 0, 0, overallScore, 0, currentDate)
+    private fun resetUser(bankAccount: Int) {
+        user = User(ArrayList(), 0, 0, 0, 0, 0, bankAccount, currentDate)
     }
 
     private fun updateUser(){
-        userReference?.update(
+        try{userReference?.update(
                 "lastDateSignedIn", currentDate,
                 "dailyCollected", user?.dailyCollected,
                 "dailyDistanceWalked", user?.dailyDistanceWalked,
-                "dailyScore", user?.dailyScore,
                 "collectedBankable", user?.collectedBankable,
                 "collectedSpareChange",user?.collectedSpareChange,
                 "collectedIds", user?.collectedIds,
                 "collectedGift", user?.collectedGift,
-                "overallScore",user?.overallScore)
+                "bankAccount",user?.bankAccount)
+        } catch (e: Exception) {
+            Timber.tag(tag).d( e,"[updateUser] get failed with ")
+            Toast.makeText(
+                    baseContext, "Cannot update user info! Check your internet connection.",
+                    Toast.LENGTH_SHORT).show()
+        }
     }
 
 }

@@ -18,15 +18,16 @@
         android:layout_marginBottom="8dp"
         android:ems="10"
         android:hint="@string/fui_sign_in_with_email"
-        android:textAlignment="center"
         android:inputType="textEmailAddress"
+        android:textAlignment="center"
         android:textColorHint="@color/mapboxWhite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.444"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.499" />
+        app:layout_constraintVertical_bias="0.499"
+        tools:ignore="Autofill" />
 
     <EditText
         android:id="@+id/fieldPassword"
@@ -37,16 +38,17 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:ems="10"
-        android:hint="Password"
-        android:textAlignment="center"
+        android:hint="@string/fui_password_hint"
         android:inputType="textPassword"
+        android:textAlignment="center"
         android:textColorHint="@color/mapboxWhite"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.444"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fieldEmail"
-        app:layout_constraintVertical_bias="0.037" />
+        app:layout_constraintVertical_bias="0.037"
+        tools:ignore="Autofill" />
 
     <Button
         android:id="@+id/signInButton"
@@ -57,15 +59,15 @@
         android:layout_marginEnd="56dp"
         android:layout_marginBottom="8dp"
         android:stateListAnimator="@null"
-        android:text="SIGN IN"
+        android:text="@string/sign_in"
         android:textColor="@color/mapboxWhite"
         app:backgroundTint="@color/fui_bgPhone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/createAccountButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.647"
+        app:layout_constraintHorizontal_bias="0.641"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.872" />
+        app:layout_constraintVertical_bias="0.963" />
 
     <Button
         android:id="@+id/createAccountButton"
@@ -74,19 +76,19 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:stateListAnimator="@null"
-        app:backgroundTint="@color/fui_bgPhone"
         android:layout_marginBottom="8dp"
-        android:text="CREATE ACCOUNT"
+        android:stateListAnimator="@null"
+        android:text="@string/create_account"
         android:textColor="@color/mapboxWhite"
+        app:backgroundTint="@color/fui_bgPhone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.741" />
+        app:layout_constraintVertical_bias="0.88" />
 
     <TextView
-        android:id="@+id/logo"
+        android:id="@+id/signCoin"
         style="@android:style/Widget.DeviceDefault.TextView"
         android:layout_width="199dp"
         android:layout_height="75dp"
@@ -94,7 +96,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="COIN"
+        android:text="@string/coin"
         android:textAlignment="center"
         android:textColor="@color/common_google_signin_btn_text_dark_default"
         android:textSize="30pt"
@@ -108,7 +110,7 @@
         tools:style="@android:style/Widget.TextView" />
 
     <TextView
-        android:id="@+id/logo2"
+        android:id="@+id/signZ"
         style="@android:style/Widget.DeviceDefault.TextView"
         android:layout_width="143dp"
         android:layout_height="75dp"
@@ -116,7 +118,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Z"
+        android:text="@string/z"
         android:textAlignment="center"
         android:textColor="@color/fui_bgPhone"
         android:textSize="30pt"
@@ -143,6 +145,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.544" />
-
 
 </android.support.constraint.ConstraintLayout>

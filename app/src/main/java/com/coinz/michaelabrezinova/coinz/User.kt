@@ -7,8 +7,9 @@ data class User (
         var collectedSpareChange: Int = 0,
         var dailyCollected: Int = 0,
         var dailyDistanceWalked: Int = 0,
-        var dailyScore: Int = 0,
-        var overallScore: Int = 0,
+        var bankAccount: Int = 0,
         var collectedGift: Int = 0,
         var lastDateSignedIn: String = ""
 )
+
+

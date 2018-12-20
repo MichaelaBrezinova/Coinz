@@ -1,10 +1,13 @@
 package com.coinz.michaelabrezinova.coinz
 
+import android.app.AlarmManager
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import kotlinx.android.synthetic.main.activity_wallet.*
 import android.app.Dialog
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
 import android.widget.*
@@ -13,7 +16,6 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import timber.log.Timber
-import java.util.*
 
 class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
@@ -74,10 +76,33 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         bankable?.text = MainActivity.user?.collectedBankable!!.toString()
         gift?.text = MainActivity.user?.collectedGift!!.toString()
         spareChange?.text = MainActivity.user?.collectedSpareChange!!.toString()
-        overallScore?.text = MainActivity.user?.overallScore!!.toString()
+        overallScore?.text = MainActivity.user?.bankAccount!!.toString()
+
+        //Set up alarm(time checker) to check the time and date
+        val repeatTime = 600 //Repeat time 10 minutes
+        val timeChecker: AlarmManager =
+                applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
+        val intent = Intent(applicationContext, ProcessTimeReceiver::class.java)
+        val pendingIntent: PendingIntent =
+                PendingIntent.getBroadcast(
+                        this, 0,  intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        //Repeat alarm every 10 seconds
+        timeChecker.setRepeating(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis(), (repeatTime*10000).toLong(), pendingIntent)
 
         //Initialize listener to updates from fireStore
         realTimeUpdateListener()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        //Cancel the alarm for checking the time
+        val intent = Intent(this, ProcessTimeReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+                this, 0, intent, 0)
+        val timeChecker = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        timeChecker.cancel(pendingIntent)
     }
 
     //Set up functions called by pressing given buttons
@@ -306,8 +331,8 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
             dialog:Dialog, amount: Int, isCollectedBankable: Boolean) {
 
         //Updates local variables(depending on the source of money) and then updates fireBase
-        MainActivity.user?.overallScore = MainActivity.user?.overallScore!!.plus(amount)
-        overallScore?.text = MainActivity.user?.overallScore!!.toString()
+        MainActivity.user?.bankAccount = MainActivity.user?.bankAccount!!.plus(amount)
+        overallScore?.text = MainActivity.user?.bankAccount!!.toString()
         if(isCollectedBankable){
             MainActivity.user?.collectedBankable =
                     MainActivity.user?.collectedBankable!!.minus(amount)
@@ -324,17 +349,21 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
 
     //Updates user information in the fireBase to stay sync
     private fun updateUser() {
-        userReference?.update(
+        try{ userReference?.update(
                 "lastDateSignedIn", currentDate,
                 "dailyCollected", MainActivity.user?.dailyCollected,
                 "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
-                "dailyScore", MainActivity.user?.dailyCollected,
                 "collectedBankable", MainActivity.user?.collectedBankable,
                 "collectedSpareChange", MainActivity.user?.collectedSpareChange,
                 "collectedIds", MainActivity.user?.collectedIds,
                 "collectedGift", MainActivity.user?.collectedGift,
-                "overallScore", MainActivity.user?.overallScore
-        )
+                "bankAccount", MainActivity.user?.bankAccount)
+        } catch(e:Exception) {
+            Timber.tag(tag).d( e,"[updateUser] get failed with ")
+            Toast.makeText(
+                    baseContext, "Cannot update user info! Check your internet connection.",
+                    Toast.LENGTH_SHORT).show()
+        }
     }
 
     //Real time updates from the fireBase, synchronizes text displaying gift money amount and the

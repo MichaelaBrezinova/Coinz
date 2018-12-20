@@ -21,6 +21,7 @@ class DownloadFileTask(private val caller: DownloadCompleteListener):
         "Unable to load content. Check your network connection"
     }
 
+    //Load the file specified by the url in the background, return the result string
     private fun loadFileFromNetwork(urlString: String): String {
         val stream: InputStream = downloadUrl(urlString)
         //Read input from stream
@@ -47,6 +48,7 @@ class DownloadFileTask(private val caller: DownloadCompleteListener):
         return conn.inputStream
     }
 
+    //Call download complete
     override fun onPostExecute(result: String) {
         super.onPostExecute(result)
 
@@ -58,6 +60,7 @@ interface DownloadCompleteListener {
     fun downloadComplete(result: String)
 }
 
+//On download complete, set the variables from MapsActivity - list of features and geoJson string
 object DownloadCompleteRunner: DownloadCompleteListener {
     private var result: String = ""
     override fun downloadComplete(result: String) {
@@ -74,7 +77,7 @@ object DownloadCompleteRunner: DownloadCompleteListener {
     }
 }
 
-//Check if the result string is proper json string, to prevent errors
+//Check if the result string is proper json string to prevent errors
 fun isStringJson(result: String): Boolean {
     try {
         JSONObject(result)

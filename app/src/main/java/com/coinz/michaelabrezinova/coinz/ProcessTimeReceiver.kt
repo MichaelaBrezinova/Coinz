@@ -21,16 +21,15 @@ class ProcessTimeReceiver : BroadcastReceiver() {
 
         Timber.tag(tag).d( "check of the date and hour")
         println("process time receiver check ")
+
         when {
             date!=MapsActivity.currentDate -> {
                 Timber.tag(tag).d( "date has changed, Main Activity restarted")
-                println("process time receiver date restarted ")
                 val mainIntent = Intent(context, MainActivity::class.java)
                 context.startActivity(mainIntent)
             }
             hour>MapsActivity.currentHour -> {
                 Timber.tag(tag).d( "part of day has changed, Maps Activity restarted")
-                println("process time receiver time restarted ")
                 val mapsIntent = Intent(context, MapsActivity::class.java)
                 context.startActivity(mapsIntent)
             }

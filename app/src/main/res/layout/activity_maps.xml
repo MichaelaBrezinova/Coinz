@@ -34,7 +34,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.168"
-                app:srcCompat="@drawable/circle_white" />
+                app:srcCompat="@drawable/circle_white"
+                tools:ignore="ContentDescription" />
 
             <TextView
                 android:id="@+id/CountCollected"

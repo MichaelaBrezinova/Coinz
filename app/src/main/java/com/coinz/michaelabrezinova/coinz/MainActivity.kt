@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onStart()
 
         //Set up the currentDate
-        sdf = SimpleDateFormat("yyyy/M/dd hh:mm:ss", Locale.US)
+        sdf = SimpleDateFormat("yyyy/MM/dd kk:mm:ss", Locale.UK)
         currentDate = sdf?.format(Date())?.substring(0,10)!!
 
         user = User(ArrayList(), 0, 0, 0, 0, 0, 0, currentDate)
@@ -254,7 +254,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     //resetUser is used when the last date the user has signed in is not today, i.e. all his
     //data are reset for the new day
     private fun resetUser(bankAccount: Int) {
-        user = User(ArrayList(), 0, 0, 0, 0, 0, bankAccount, currentDate)
+        user = User(ArrayList(), 0, 0, 0, 0, bankAccount, 0, currentDate)
     }
 
     private fun updateUser(){

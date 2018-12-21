@@ -234,6 +234,11 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         //Current date is initialized
         currentDate = MainActivity.sdf?.format(Date())?.substring(0,10)!!
         currentHour = MainActivity.sdf?.format(Date())?.substring(11,13)!!
+        println("currentDateis $currentDate and current hour is $currentHour")
+        //Set displayed number of collected coins to correspond with the user's daily collected
+        //number
+        val countCollected = findViewById<TextView>(R.id.CountCollected)
+        countCollected.text = MainActivity.user?.dailyCollected!!.toString()
 
         //Get download date and geoJSON file stored in the shared preferences
         val downloadInformation =
@@ -269,7 +274,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         }
 
         //Set up alarm to check the time and date
-        val repeatTime = 600 //Repeat time 10 minutes
+        val repeatTime = 30 //Repeat time 10 minutes
         val timeChecker: AlarmManager =
                 applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(applicationContext, ProcessTimeReceiver::class.java)
@@ -278,7 +283,7 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
                         this, 0,  intent, PendingIntent.FLAG_UPDATE_CURRENT)
         //Repeat alarm every 10 seconds
         timeChecker.setRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis(), (repeatTime*10000).toLong(), pendingIntent)
+                System.currentTimeMillis(), (repeatTime*1000).toLong(), pendingIntent)
 
         //Start the update listener for updates from fireStore
         realTimeUpdateListener()

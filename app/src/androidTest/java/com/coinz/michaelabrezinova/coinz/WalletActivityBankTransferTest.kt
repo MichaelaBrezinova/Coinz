@@ -81,5 +81,8 @@ class WalletActivityBankTransferTest {
         onView(withId(R.id.cancelBankButton)).perform(click())
         Thread.sleep(2000)
         onView(withText("Transfer to the bank")).check(doesNotExist())
+
+        //To sign-out for next tests, if clearData is not specified in configurations
+        onView(withId(R.id.signOutButton)).perform(click())
     }
 }

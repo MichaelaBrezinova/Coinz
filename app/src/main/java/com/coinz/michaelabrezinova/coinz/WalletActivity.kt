@@ -79,16 +79,16 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
         overallScore?.text = MainActivity.user?.bankAccount!!.toString()
 
         //Set up alarm(time checker) to check the time and date
-        val repeatTime = 600 //Repeat time 10 minutes
+        val repeatTime = 120 //Repeat time -2 minutes
         val timeChecker: AlarmManager =
                 applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(applicationContext, ProcessTimeReceiver::class.java)
         val pendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(
                         this, 0,  intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        //Repeat alarm every 10 seconds
+        //Repeat alarm every 5 seconds
         timeChecker.setRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis(), (repeatTime*10000).toLong(), pendingIntent)
+                System.currentTimeMillis(), (repeatTime*5000).toLong(), pendingIntent)
 
         //Initialize listener to updates from fireStore
         realTimeUpdateListener()
@@ -350,12 +350,8 @@ class WalletActivity : AppCompatActivity(),View.OnClickListener {
     //Updates user information in the fireBase to stay sync
     private fun updateUser() {
         try{ userReference?.update(
-                "lastDateSignedIn", currentDate,
-                "dailyCollected", MainActivity.user?.dailyCollected,
-                "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
                 "collectedBankable", MainActivity.user?.collectedBankable,
                 "collectedSpareChange", MainActivity.user?.collectedSpareChange,
-                "collectedIds", MainActivity.user?.collectedIds,
                 "collectedGift", MainActivity.user?.collectedGift,
                 "bankAccount", MainActivity.user?.bankAccount)
         } catch(e:Exception) {

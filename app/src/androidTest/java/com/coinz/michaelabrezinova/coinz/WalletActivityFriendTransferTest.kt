@@ -101,6 +101,7 @@ class WalletActivityFriendTransferTest {
         Thread.sleep(5000)
         onView(withText("Transfer to a friend")).check(doesNotExist())
 
-
+        //To sign-out for next tests, if clearData is not in specified configurations
+        onView(withId(R.id.signOutButton)).perform(click())
     }
 }

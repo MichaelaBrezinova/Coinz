@@ -64,6 +64,8 @@ class MapsActivityScreenTest {
         onView(withId(R.id.banktransferButton)).check(matches(isDisplayed()))
         onView(withId(R.id.friendtransferButton)).check(matches(isDisplayed()))
         onView(withId(R.id.signOutButton)).check(matches(isDisplayed()))
-        onView(withId(R.id.signOutButton)).check(doesNotExist())
+
+        //To sign-out for next tests, if clearData is not specified in configurations
+        onView(withId(R.id.signOutButton)).perform(click())
     }
 }

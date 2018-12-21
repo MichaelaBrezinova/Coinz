@@ -274,16 +274,16 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
         }
 
         //Set up alarm to check the time and date
-        val repeatTime = 30 //Repeat time 10 minutes
+        val repeatTime = 120 //Repeat time - 2 minutes
         val timeChecker: AlarmManager =
                 applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(applicationContext, ProcessTimeReceiver::class.java)
         val pendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(
                         this, 0,  intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        //Repeat alarm every 10 seconds
+        //Repeat alarm every 5 seconds
         timeChecker.setRepeating(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis(), (repeatTime*1000).toLong(), pendingIntent)
+                System.currentTimeMillis(), (repeatTime*5000).toLong(), pendingIntent)
 
         //Start the update listener for updates from fireStore
         realTimeUpdateListener()
@@ -455,31 +455,36 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
             }
             for (feature in partDayFeatures) {
                 //checks if the user has already picked up the coin, if yes, doesn't display it
-                val properties = feature.properties()
-                if (!MainActivity.user?.collectedIds
-                                ?.contains(properties?.get("id").toString())!!){
 
-                    //Get marker(coin) position
-                    val point = feature.geometry() as Point
-                    val latlng = LatLng(point.coordinates()[1], point.coordinates()[0])
+                try{
+                    val properties = feature.properties()
+                    if (!MainActivity.user?.collectedIds
+                                  ?.contains(properties?.get("id").toString())!!){
 
-                    //Get currency and value
-                    var currency= properties?.get("currency").toString()
-                    currency =currency.substring(1, currency.length -1)
-                    var value = properties?.get("value").toString()
-                    value = value.substring(1, value.length -1)
-                    val goldValue = getGoldValue(currency,value)
+                        //Get marker(coin) position
+                        val point = feature.geometry() as Point
+                        val latlng = LatLng(point.coordinates()[1], point.coordinates()[0])
 
-                    //Get icon depending on the currency
-                    val icon: Icon = getIcon(currency)
+                        //Get currency and value
+                        var currency= properties?.get("currency").toString()
+                        currency =currency.substring(1, currency.length -1)
+                        var value = properties?.get("value").toString()
+                        value = value.substring(1, value.length -1)
+                        val goldValue = getGoldValue(currency,value)
 
-                    //Create marker, add marker to map and to list of markers
-                    val marker = map?.addMarker(MarkerOptions()
-                            .snippet(goldValue)
-                            .position(latlng)
-                            .title(properties?.get("id").toString())
-                            .icon(icon))
-                    markers?.add(marker!!)
+                        //Get icon depending on the currency
+                        val icon: Icon = getIcon(currency)
+
+                        //Create marker, add marker to map and to list of markers
+                        val marker = map?.addMarker(MarkerOptions()
+                                .snippet(goldValue)
+                                .position(latlng)
+                                .title(properties?.get("id").toString())
+                                .icon(icon))
+                        markers?.add(marker!!)
+                    }
+                } catch(e:Exception) {
+                    Timber.tag(tag).d( e,"[displayCoins] get failed with ")
                 }
             }
         }
@@ -544,14 +549,10 @@ class MapsActivity : AppCompatActivity(), PermissionsListener, View.OnClickListe
     //Updates user information to stay synchronized with the fireStore
     private fun updateUser() {
         try{ userReference?.update(
-                "lastDateSignedIn", currentDate,
                 "dailyCollected", MainActivity.user?.dailyCollected,
-                "dailyDistanceWalked", MainActivity.user?.dailyDistanceWalked,
                 "collectedBankable", MainActivity.user?.collectedBankable,
                 "collectedSpareChange", MainActivity.user?.collectedSpareChange,
-                "collectedIds", MainActivity.user?.collectedIds,
-                "collectedGift", MainActivity.user?.collectedGift,
-                "bankAccount", MainActivity.user?.bankAccount)
+                "collectedIds", MainActivity.user?.collectedIds)
         } catch(e:Exception) {
             Timber.tag(tag).d( e,"[updateUser] get failed with ")
             Toast.makeText(

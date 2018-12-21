@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onStart()
 
         //Set up the currentDate
-        sdf = SimpleDateFormat("yyyy/MM/dd kk:mm:ss", Locale.UK)
+        sdf = SimpleDateFormat("yyyy/MM/dd kk:mm:ss", Locale.US)
         currentDate = sdf?.format(Date())?.substring(0,10)!!
 
         user = User(ArrayList(), 0, 0, 0, 0, 0, 0, currentDate)

@@ -18,7 +18,7 @@ import android.support.test.espresso.matcher.ViewMatchers.isDisplayed
 import android.support.test.espresso.matcher.ViewMatchers.withId
 
 @RunWith(AndroidJUnit4::class)
-class MainActivitySuccessLogin {
+class MainActivitySuccessLoginTest {
 
     @Rule
     @JvmField
@@ -54,5 +54,10 @@ class MainActivitySuccessLogin {
         onView(withId(R.id.changeThemeButton)).check(matches(isDisplayed()))
         onView(withId(R.id.CountCollected)).check(matches(isDisplayed()))
         onView(withId(R.id.coins)).check(matches(isDisplayed()))
+
+        //To sign-out for next tests, if clearData is not specified in configurations
+        onView(withId(R.id.openWalletButton)).perform(click())
+        Thread.sleep(10000)
+        onView(withId(R.id.signOutButton)).perform(click())
     }
 }

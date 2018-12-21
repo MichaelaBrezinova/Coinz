@@ -31,8 +31,7 @@ class MainActivityScreenTest {
     @Rule @JvmField
     var mainActivityActivityTestRule = ActivityTestRule(MainActivity::class.java)
 
-    //Run clearData from gradle to clear the data, implemented in the configurations
-
+    //Run clearData from gradle to clear the data before tests, implemented in the configurations
     @Test
     @Throws(Exception::class)
     fun clickSignInButtonWithEmptyFields_errorsShow() {
